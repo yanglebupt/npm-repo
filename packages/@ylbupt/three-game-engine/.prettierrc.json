@@ -1,0 +1,10 @@
+{
+  "semi": false,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "bracketSameLine": true,
+  "jsxBracketSameLine": true,
+  "trailingComma": "none",
+  "proseWrap": "always",
+  "jsx-a11y/img-has-alt": "off" 
+}

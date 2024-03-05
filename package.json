@@ -1,0 +1,12 @@
+{
+  "name": "root",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "packages/@ylbupt/*",
+    "packages/@types/*"
+  ],
+  "devDependencies": {
+    "lerna": "^6.6.2"
+  }
+}
