@@ -3,7 +3,6 @@ import {
   PerspectiveCamera,
   WebGLRenderer,
   Color,
-  sRGBEncoding,
   SRGBColorSpace,
   AnimationMixer,
   Clock,
@@ -13,21 +12,26 @@ import {
   ColorRepresentation
 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { loadHDRTexture } from '../tools/loader'
+import { EnvMapType, loadHDRTexture } from '../tools/loader'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 
 /**
- * @param {string} bgPath 天空图片地址
- * @param {string} backgroundColor 背景颜色
- * @param {boolean} isBox 是否 cube 类型，还是 hdr 类型
- * @param {string} background 天空是否覆盖背景颜色
+ * @param {ColorRepresentation} backgroundColor 背景颜色
+ * @param {boolean} showEnvMap 是否开启展示天空的环境贴图
+ * @param {boolean} useEnvMap 天空的环境贴图是否作用于场景
+ * @param {string} envMapPath 天空环境贴图路径
+ * @param {EnvMapType} envMapType cube 类型，还是 hdr 类型
+ * @param {boolean} orbitControl 是否启用控制器
+ * @param {boolean} loadWhenConstruct 是否在构造时进行 load
  */
 export interface MainAppOptions {
-  bgPath?: string
   backgroundColor?: ColorRepresentation
-  isBox?: boolean
-  background?: boolean
+  showEnvMap?: boolean
+  useEnvMap?: boolean
+  envMapPath?: string
+  envMapType?: EnvMapType
   orbitControl?: boolean
+  loadWhenConstruct?: boolean
 }
 
 /**
@@ -52,50 +56,52 @@ export class MainApp {
   dt: number = 0
   t: number = 0
   mixers: AnimationMixer[]
-  manager: LoadingManager
+  loadingManager: LoadingManager
   container: HTMLDivElement
   options: MainAppOptions
-  _lookAt: Vector3 = new Vector3(0, 0, 0)
+  private _lookAt: Vector3 = new Vector3(0, 0, 0)
 
   create() {}
 
   constructor(options: MainAppOptions) {
-    const container = document.createElement('div')
-    document.body.appendChild(container)
+    this.container = document.createElement('div')
+    document.body.appendChild(this.container)
 
-    const scene = new Scene()
-    scene.background = new Color(options.backgroundColor || 0xcccccc)
+    this.scene = new Scene()
+    this.scene.background = new Color(options.backgroundColor || 0xcccccc)
 
-    const mainCamera = new PerspectiveCamera(
+    this.mainCamera = new PerspectiveCamera(
       70,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     )
-    mainCamera.position.set(0, 0, -5)
-    mainCamera.name = 'MainCamera'
-    scene.add(mainCamera)
+    this.mainCamera.position.set(0, 0, -5)
+    this.mainCamera.name = 'MainCamera'
+    this.scene.add(this.mainCamera)
 
-    const renderer = this.createRenderer()
+    this.renderer = this.createRenderer()
 
-    const orbitControl = options.orbitControl
-      ? new OrbitControls(mainCamera, renderer.domElement)
+    this.orbitControl = options.orbitControl
+      ? new OrbitControls(this.mainCamera, this.renderer.domElement)
       : null
 
     window.addEventListener('resize', this.resize.bind(this))
 
-    this.container = container
-    this.scene = scene
-    this.mainCamera = mainCamera
-    this.renderer = renderer
-    this.updateRenderer(renderer, false)
-    this.orbitControl = orbitControl
+    this.container.appendChild(this.renderer.domElement)
+
     this.mixers = []
     this.clock = new Clock()
-    this.manager = new LoadingManager()
+    this.loadingManager = new LoadingManager()
     this.options = options
+
+    const { loadWhenConstruct = true } = this.options
+    if (loadWhenConstruct)
+      /* 加载资源 */
+      this.load()
   }
 
+  /* 创建并设置 renderer */
   createRenderer(_renderer?: WebGLRenderer) {
     const renderer: WebGLRenderer & { outputColorSpace: string } =
       _renderer ??
@@ -106,13 +112,12 @@ export class MainApp {
     renderer.setSize(window.innerWidth, window.innerHeight)
     if (renderer.outputColorSpace) {
       renderer.outputColorSpace = SRGBColorSpace
-    } else {
-      renderer.outputEncoding = sRGBEncoding
     }
     renderer.setAnimationLoop(this.render.bind(this))
     return renderer
   }
 
+  /* 释放当前 App 的 renderer */
   disposeRenderer() {
     this.container.removeChild(this.renderer.domElement)
     this.renderer.forceContextLoss()
@@ -123,16 +128,18 @@ export class MainApp {
     this.renderer = null
   }
 
-  updateRenderer(_renderer: WebGLRenderer, flag = true) {
+  /* 更新当前 App 的 renderer */
+  updateRenderer(_renderer: WebGLRenderer) {
     this.disposeRenderer()
     this.container.appendChild(_renderer.domElement)
-    if (flag) this.renderer = _renderer
+    this.renderer = _renderer
   }
 
+  /* 异步加载资源的 */
   async load() {
-    const { bgPath, isBox, background } = this.options
-    if (bgPath) await this.setEnvironment(bgPath, isBox, background)
-    this.render()
+    const { envMapPath, envMapType, showEnvMap, useEnvMap } = this.options
+    if (envMapPath)
+      await this.setEnvironment(envMapPath, envMapType, useEnvMap, showEnvMap)
   }
 
   resize() {
@@ -164,10 +171,16 @@ export class MainApp {
     this.t = t
   }
 
-  async setEnvironment(path: string, isBox?: boolean, background?: boolean) {
-    const texture = await loadHDRTexture(path, isBox, this.manager)
-    this.scene.environment = texture
-    if (background) this.scene.background = texture
+  /* 设置环境贴图 */
+  async setEnvironment(
+    path: string,
+    envMapType?: EnvMapType,
+    useEnvMap?: boolean,
+    showEnvMap?: boolean
+  ) {
+    const texture = await loadHDRTexture(path, envMapType, this.loadingManager)
+    if (useEnvMap) this.scene.environment = texture
+    if (showEnvMap) this.scene.background = texture
   }
 
   destroy() {

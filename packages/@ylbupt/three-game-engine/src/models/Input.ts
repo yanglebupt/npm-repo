@@ -1,38 +1,40 @@
-import { iter2list } from '../tools/common'
+export type KeyFnPair<T> = {
+  [P in keyof T]?: EventFunc
+}
 
+export type EventKey = keyof DocumentEventMap
+export type EventFunc = (evt: Event) => void
 /**
  * @description 用于监听用户事件的抽象类
- * @param {(keyof DocumentEventMap)[]} keys 需要监听的事件的名字
- * @param {Map<keyof DocumentEventMap, Event>} key2event 事件名和触发的时间
- * @param {Map<keyof DocumentEventMap, (evt: Event) => void>} key2fn 事件名和触发的函数
- * @method registerEventListener  根据 keys 注册监听事件
+ * @param {EventKey[]} keys 需要监听的事件的名字
+ * @param {Map<EventKey, EventFunc>} key2fn 事件名和触发的函数
+ * @method addEventListener  根据 keys 注册监听事件
  * @method removeEventListener  根据 keys 移除监听事件
  */
 export class Input {
-  keys: (keyof DocumentEventMap)[]
-  fns: ((evt: Event) => void)[] | undefined
-  key2event: Map<keyof DocumentEventMap, Event> = new Map()
-  key2fn: Map<keyof DocumentEventMap, (evt: Event) => void> = new Map()
+  keys: EventKey[]
+  fns: EventFunc[] | undefined
+  key2event: Map<EventKey, Event> = new Map()
+  key2fn: Map<EventKey, EventFunc> = new Map()
+  constructor(keys: EventKey[], fns?: EventFunc[])
+  constructor(KeyFnPair: KeyFnPair<DocumentEventMap>)
   constructor(
-    keys: (keyof DocumentEventMap)[],
-    fns?: ((evt: Event) => void)[]
+    keysOrKeyFnPair: EventKey[] | KeyFnPair<DocumentEventMap>,
+    fns?: EventFunc[]
   ) {
-    this.keys = keys
-    this.fns = fns
-    this.registerEventListener()
+    if (Array.isArray(keysOrKeyFnPair)) {
+      this.keys = keysOrKeyFnPair
+      this.fns = fns
+    } else {
+      this.keys = Object.keys(keysOrKeyFnPair) as EventKey[]
+      this.fns = Object.values(keysOrKeyFnPair) as EventFunc[]
+    }
+    this.addAllEventListener()
   }
 
-  registerEventListener() {
+  private addAllEventListener() {
     this.keys.forEach((k, idx) => {
       const fn = (evt: Event) => {
-        // 需要删除互斥的事件
-        const main = k.split(/up|down|start|move|end|enter|leave/)[0]
-        iter2list(this.key2event.keys())
-          .filter((key) => key.includes(main))
-          .forEach((key) => {
-            this.key2event.delete(key)
-          })
-        this.key2event.set(k, evt)
         // 是否调用回调函数
         if (this.fns && this.fns[idx]) {
           this.fns[idx](evt)
@@ -43,10 +45,19 @@ export class Input {
     })
   }
 
-  removeEventListener() {
+  addEventListener(k: EventKey, fn: EventFunc) {
+    this.key2fn.set(k, fn)
+    document.addEventListener(k, fn)
+  }
+
+  removeEventListener(k: EventKey) {
+    const fn = this.key2fn.get(k)!
+    document.removeEventListener(k, fn)
+  }
+
+  removeAllEventListener() {
     this.keys.forEach((k) => {
-      const fn = this.key2fn.get(k)!
-      document.removeEventListener(k, fn)
+      this.removeEventListener(k)
     })
   }
 }

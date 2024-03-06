@@ -27,5 +27,9 @@ export default {
     'three/examples/jsm/loaders/GLTFLoader',
     'three/examples/jsm/loaders/DRACOLoader'
   ],
-  plugins: [resolve({ extensions: ['.ts'] }), typescript2(), terser()]
+  plugins: [
+    resolve({ extensions: ['.ts'] }),
+    typescript2({ tsconfig: './tsconfig.build.json' }),
+    terser()
+  ]
 }

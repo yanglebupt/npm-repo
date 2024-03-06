@@ -5,21 +5,32 @@ import {
   CubeTextureLoader,
   EquirectangularReflectionMapping,
   LoadingManager,
-  Texture
+  MagnificationTextureFilter,
+  Mapping,
+  MinificationTextureFilter,
+  PixelFormat,
+  Texture,
+  TextureDataType,
+  TextureLoader,
+  Wrapping
 } from 'three'
 
-// 加载 gltf 模型,首先需要 draco 解压模型
+// 加载 gltf 模型, 首先需要 draco 解压模型
 export const loadGLTFModel = async (
   path: string,
   needDecoder = true,
-  manager?: LoadingManager,
-  onProgress?: (percent: number, total?: number) => void,
-  decoderPath?: string,
-  decoderConfig?: object
+  loadingManager?: LoadingManager,
+  options?: Partial<{
+    onProgress: (percent: number, total?: number) => void
+    decoderPath: string
+    decoderConfig: object
+  }>
 ) => {
-  const gltfLoader = new GLTFLoader(manager)
+  const { onProgress, decoderPath, decoderConfig } = options ?? {}
 
-  const dracoLoader = new DRACOLoader(manager)
+  const gltfLoader = new GLTFLoader(loadingManager)
+
+  const dracoLoader = new DRACOLoader(loadingManager)
   dracoLoader.setDecoderPath(decoderPath ?? '/libs/draco/')
   dracoLoader.setDecoderConfig(decoderConfig ?? { type: 'js' })
   dracoLoader.preload()
@@ -35,14 +46,21 @@ export const loadGLTFModel = async (
   }) as Promise<GLTF>
 }
 
+export const EnvMapCube: 'Cube' = 'Cube'
+export const EnvMapHDR: 'HDR' = 'HDR'
+
+export type EnvMapType = typeof EnvMapCube | typeof EnvMapHDR
+
 // 加载 hdr 贴图
 export const loadHDRTexture = async (
   path: string,
-  isBox?: boolean,
-  manager?: LoadingManager
+  type: EnvMapType = EnvMapCube,
+  loadingManager?: LoadingManager
 ): Promise<Texture> => {
-  if (isBox) {
-    const cubeTextureLoader = new CubeTextureLoader(manager).setPath(path)
+  if (type === EnvMapCube) {
+    const cubeTextureLoader = new CubeTextureLoader(loadingManager).setPath(
+      path
+    )
     return new Promise((rlv, rjt) => {
       cubeTextureLoader
         .loadAsync(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg'])
@@ -50,7 +68,7 @@ export const loadHDRTexture = async (
         .catch(rjt)
     })
   } else {
-    const hdrLoader = new RGBELoader(manager)
+    const hdrLoader = new RGBELoader(loadingManager)
     return new Promise((rlv, rjt) => {
       hdrLoader
         .loadAsync(path)
@@ -62,4 +80,29 @@ export const loadHDRTexture = async (
         .catch(rjt)
     })
   }
+}
+
+export interface TextureOptions {
+  image?: TexImageSource | OffscreenCanvas
+  mapping?: Mapping
+  /* 设置 uv 采样超过0-1范围时，如何处理，可以重复、镜像、边缘等方式*/
+  wrapS?: Wrapping
+  wrapT?: Wrapping
+  magFilter?: MagnificationTextureFilter
+  minFilter?: MinificationTextureFilter
+  format?: PixelFormat
+  type?: TextureDataType
+  anisotropy?: number
+}
+
+export const loadTexture = (
+  filename: string,
+  options: TextureOptions = {},
+  loadingManager?: LoadingManager
+) => {
+  const tex = new TextureLoader(loadingManager).load(filename)
+  Object.keys(options).forEach((k) => {
+    Reflect.set(tex, k, options[k as keyof TextureOptions])
+  })
+  return tex
 }

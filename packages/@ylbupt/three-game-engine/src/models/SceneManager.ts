@@ -1,25 +1,21 @@
 import { MainApp } from './MainApp'
 
 export class SceneManager {
-  sceneMap: Map<number, MainApp> = new Map()
+  sceneMap: Map<number, () => MainApp> = new Map()
   constructor() {}
 
-  addScene(id: number, scene: MainApp) {
-    this.sceneMap.set(id, scene)
+  addScene(id: number, createScene: () => MainApp) {
+    this.sceneMap.set(id, createScene)
   }
 
   load(id: number) {
-    const scene = this.sceneMap.get(id)
-    if (!scene) return
-    // 清空场景
-    scene?.destroy()
-
-    // @ts-ignore
-    // window.app = new scene.constructor({
-    //   background: true,
-    //   bgPath: '/src/assets/plane/paintedsky/',
-    //   isBox: true
-    // })
-    window.app = scene.create()
+    const createScene = this.sceneMap.get(id)
+    if (!createScene) return
+    // 清空当前场景
+    window.app?.destroy()
+    // 新建 id 场景
+    const app = createScene()
+    window.app = app
+    return app
   }
 }

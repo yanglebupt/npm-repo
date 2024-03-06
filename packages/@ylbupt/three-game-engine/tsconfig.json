@@ -16,8 +16,14 @@
     "noEmitOnError": true,
     "declaration": true,
     "declarationDir": "./dist",
-    "outDir": "./dist"
+    "outDir": "./dist",
+
+    "baseUrl": ".",
+    "paths": {
+      "@ylbupt/three-game-engine": ["src/index"],
+      "@ylbupt/three-game-engine/*": ["src/*"]
+    }
   },
-  "include": ["src"],
+  "include": ["main.ts", "src", "start-demo/**/*.ts", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

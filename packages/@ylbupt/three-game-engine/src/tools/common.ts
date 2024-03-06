@@ -22,7 +22,7 @@ export const forIter = <T>(
   }
 }
 
-// 迭代器装换成数组
+// 迭代器装换成数组，用来遍历 Map 对象
 export const iter2list = <T>(iter: IterableIterator<T>) => {
   const list: T[] = []
   let _done: boolean | undefined = false
