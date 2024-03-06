@@ -1,6 +1,6 @@
 {
   "name": "@ylbupt/three-game-engine",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "这是一个模块化开发 `three.js` 应用的库，以面向对象的方式编写你的 3D 应用",
   "author": "杨乐 <2735686935@qq.com>",
   "homepage": "",
