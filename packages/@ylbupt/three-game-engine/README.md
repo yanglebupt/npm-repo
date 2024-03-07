@@ -16,7 +16,7 @@ npm i @ylbupt/three-game-engine
 
 # 更多文档
 
-<a href="./docs/tools.md">tools</a>
+<a href="./docs/tools.md">tools</a>，<a href="./docs/AnimationModel.md">AnimationModel</a>，<a href="./docs/Coordinate.md">Coordinate</a>，<a href="./docs/LoaderBar.md">LoaderBar</a>，<a href="./docs/Script.md">Script</a>，
 
 # 主要 API
 
@@ -165,6 +165,9 @@ export interface AudioOptions {
 - `pause(name: string)`
 - `isPlaying(name: string)`
 - `stopAll()`
+- `async load()` 开始加载资源
+
+注意别忘了在所属类中的 `load()` 方法中调用 `this.soundManager.load()`，同时对于位置声音，需要将 `this.soundManager.audioListener` 添加到相机上
 
 使用例子如下
 
@@ -185,8 +188,6 @@ this.soundManager = new SoundManager(
 )
 ```
 
-注意别忘了在所属类中的 `load()` 方法中调用 `this.soundManager.load()`，同时对于位置声音，需要将 `this.soundManager.audioListener` 添加到相机上
-
 ### Input
 
 用来统一管理事件监听的类
@@ -200,7 +201,7 @@ constructor(keys: (keyof DocumentEventMap)[], fns?: ((evt: Event) => void)[])  /
 constructor(KeyFnPair: KeyFnPair<DocumentEventMap>)  // 对象形式
 ```
 
-#### 
+#### Methods
 - `addEventListener(k: EventKey, fn: EventFunc)` 添加一个监听
 - `removeEventListener(k: keyof DocumentEventMap)` 取消监听
 

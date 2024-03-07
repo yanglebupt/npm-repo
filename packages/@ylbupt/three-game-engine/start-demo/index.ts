@@ -1,11 +1,15 @@
 import {
+  AnimationModel,
   Input,
+  InstanceModel,
   MainApp,
   MainAppOptions,
-  SoundManager
+  SoundManager,
+  cloneModel
 } from '@ylbupt/three-game-engine'
 import {
   BoxGeometry,
+  HemisphereLight,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial
@@ -14,6 +18,7 @@ import {
 export class MyApp extends MainApp {
   soundManager: SoundManager
   input: Input
+  model: AnimationModel
   constructor(options: MainAppOptions) {
     super(options)
 
@@ -40,12 +45,34 @@ export class MyApp extends MainApp {
     box.position.set(0, 0, 0)
     this.scene.add(box)
 
+    /* 加载 GLTF 模型 */
+    this.model = new AnimationModel(
+      '/start-demo/assets/eve2.glb',
+      'plane',
+      true,
+      this.loadingManager
+    )
+
+    /* 添加环境光，照亮模型 */
+    const ambient = new HemisphereLight(0xffffff)
+    this.scene.add(ambient)
+
     /* 手动 load 资源 */
     this.load()
   }
 
   async load() {
-    Promise.all([super.load(), this.soundManager.load()])
+    await Promise.all([
+      super.load(),
+      this.soundManager.load(),
+      this.model.load()
+    ])
+    /* 将加载的模型添加到场景中 */
+    this.scene.add(this.model.getRootObject()!)
+    this.mixers.push(this.model.mixer!)
+    this.model.loopAllActions(3000)
+    this.model.position.set(0, 2, 0)
+    this.model.rotateY(45)
   }
 
   render() {

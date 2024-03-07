@@ -25,7 +25,8 @@ export default {
     'three/src/math/MathUtils',
     'three/examples/jsm/loaders/RGBELoader',
     'three/examples/jsm/loaders/GLTFLoader',
-    'three/examples/jsm/loaders/DRACOLoader'
+    'three/examples/jsm/loaders/DRACOLoader',
+    'three/examples/jsm/utils/SkeletonUtils'
   ],
   plugins: [
     resolve({ extensions: ['.ts'] }),

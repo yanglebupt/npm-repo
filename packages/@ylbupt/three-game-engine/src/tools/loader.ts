@@ -15,23 +15,25 @@ import {
   Wrapping
 } from 'three'
 
+export type LoadGLTFOptions = Partial<{
+  onProgress: (percent: number, total?: number) => void
+  decoderPath: string
+  decoderConfig: object
+}>
+
 // 加载 gltf 模型, 首先需要 draco 解压模型
 export const loadGLTFModel = async (
   path: string,
   needDecoder = true,
   loadingManager?: LoadingManager,
-  options?: Partial<{
-    onProgress: (percent: number, total?: number) => void
-    decoderPath: string
-    decoderConfig: object
-  }>
+  options?: LoadGLTFOptions
 ) => {
   const { onProgress, decoderPath, decoderConfig } = options ?? {}
 
   const gltfLoader = new GLTFLoader(loadingManager)
 
   const dracoLoader = new DRACOLoader(loadingManager)
-  dracoLoader.setDecoderPath(decoderPath ?? '/libs/draco/')
+  dracoLoader.setDecoderPath(decoderPath ?? '/src/libs/draco/')
   dracoLoader.setDecoderConfig(decoderConfig ?? { type: 'js' })
   dracoLoader.preload()
 
