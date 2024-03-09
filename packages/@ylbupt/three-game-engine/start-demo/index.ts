@@ -1,7 +1,9 @@
 import {
   AnimationModel,
+  ColliderScript,
   Input,
   InstanceModel,
+  LoaderBar,
   MainApp,
   MainAppOptions,
   SoundManager,
@@ -10,17 +12,29 @@ import {
 import {
   BoxGeometry,
   HemisphereLight,
+  LoadingManager,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial
 } from 'three'
+import { LoaderBarDomElement } from './loader-bar'
+import { RotateScript, RotateScriptOptions } from './scripts/Rotate'
 
 export class MyApp extends MainApp {
   soundManager: SoundManager
   input: Input
+  box: Mesh
   model: AnimationModel
+  loaderBar: LoaderBar
+  collider_1: ColliderScript
+  collider_2: ColliderScript | null = null
   constructor(options: MainAppOptions) {
     super(options)
+
+    /* 进度条 */
+    this.loaderBar = new LoaderBar(new LoaderBarDomElement())
+    /* 收集 LoadingManager */
+    this.loaderBar.addLoadingManager('manager-1', this.loadingManager)
 
     /* 一个声音管理器 */
     this.soundManager = new SoundManager(
@@ -36,32 +50,43 @@ export class MyApp extends MainApp {
     })
 
     /* 添加一个几何对象 */
-    const box = new Mesh(
+    this.box = new Mesh(
       new BoxGeometry(1, 1, 1),
       new MeshBasicMaterial({
         color: 0xff0000
       })
     )
-    box.position.set(0, 0, 0)
-    this.scene.add(box)
+    this.box.name = 'box'
+    this.box.position.set(0, 0, 0)
+    this.scene.add(this.box)
+    /* 挂载脚本 */
+    this.box.addScript<RotateScript, RotateScriptOptions>(RotateScript, {
+      dir: 'y'
+    })
+    /* 挂载碰撞器 */
+    this.collider_1 = this.box.addScript<ColliderScript>(ColliderScript)
 
     /* 加载 GLTF 模型 */
+    const loadingManager_2 = new LoadingManager()
     this.model = new AnimationModel(
       '/start-demo/assets/eve2.glb',
       'plane',
-      true,
-      this.loadingManager
+      false,
+      loadingManager_2
     )
+    this.loaderBar.addLoadingManager('manager-2', loadingManager_2)
 
     /* 添加环境光，照亮模型 */
     const ambient = new HemisphereLight(0xffffff)
     this.scene.add(ambient)
 
     /* 手动 load 资源 */
-    this.load()
+    this.loadWithLifecycle()
   }
 
   async load() {
+    this.loaderBar.show()
+
     await Promise.all([
       super.load(),
       this.soundManager.load(),
@@ -71,12 +96,37 @@ export class MyApp extends MainApp {
     this.scene.add(this.model.getRootObject()!)
     this.mixers.push(this.model.mixer!)
     this.model.loopAllActions(3000)
-    this.model.position.set(0, 2, 0)
-    this.model.rotateY(45)
+    // this.model.position.set(0, 2, 0) /* 注意只有在 load 之后才可以操作 */
+
+    this.loaderBar.hidden()
+  }
+
+  created() {
+    /* 挂载脚本 */
+    this.model.addScript<RotateScript>(RotateScript, {
+      dir: 'x'
+    })
+    /* 挂载碰撞器 */
+    this.collider_2 =
+      this.model.addScript<ColliderScript>(
+        ColliderScript
+      ) /* 在 create 之前 添加脚本，之后才可以执行脚本的生命周期函数 */
+    super.created()
   }
 
   render() {
     super.render()
+    this.collider_1.intersects(this.collider_2)
+
+    if (this.collider_1.triggerEnter()) {
+      console.log('Enter')
+    }
+    if (this.collider_1.triggerStay()) {
+      console.log('Stay')
+    }
+    if (this.collider_1.triggerExit()) {
+      console.log('Exit')
+    }
   }
 
   onClick() {

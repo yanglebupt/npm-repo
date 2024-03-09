@@ -1,7 +1,8 @@
 import { LoadingManager } from 'three'
 
 export interface DomElement {
-  setPercentage: (percentage: number) => void
+  setPercentage: (percentage: number, name?: string, url?: string) => void
+  onLoaded: (name?: string) => void
   showLoading: () => void
   hiddenLoading: () => void
 }
@@ -11,31 +12,35 @@ export interface DomElement {
  * @param {DomElement} domElement 控件元素
  */
 export class LoaderBar {
-  managerMap: Map<string, LoadingManager> = new Map()
   domElement: DomElement
+  count: number = 0
 
   constructor(domElement: DomElement) {
     this.domElement = domElement
   }
 
-  addLoaderManager(name: string, manager: LoadingManager) {
+  addLoadingManager(name: string, manager: LoadingManager) {
     manager.onError = (url) => this.onError(name, url)
     manager.onProgress = (url, loaded, total) =>
       this.onProgress(name, url, loaded, total)
     manager.onStart = (url, loaded, total) =>
       this.onStart(name, url, loaded, total)
     manager.onLoad = () => this.onLoad(name)
-    this.managerMap.set(name, manager)
+    this.count++
   }
 
-  onError(name: string, url: string) {}
+  private onError(name: string, url: string) {}
 
-  onProgress(name: string, url: string, loaded: number, total: number) {
-    this.domElement.setPercentage((loaded / total) * 100)
+  private onProgress(name: string, url: string, loaded: number, total: number) {
+    this.domElement.setPercentage((loaded / total) * 100, name, url)
   }
-  onStart(name: string, url: string, loaded: number, total: number) {}
 
-  onLoad(name: string) {}
+  private onStart(name: string, url: string, loaded: number, total: number) {}
+
+  /* 某个 loadingmanager 加载完毕 */
+  private onLoad(name: string) {
+    if (this.count > 1) this.domElement.onLoaded(name)
+  }
 
   show() {
     this.domElement.showLoading()

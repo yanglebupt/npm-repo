@@ -14,6 +14,7 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { EnvMapType, loadHDRTexture } from '../tools/loader'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
+import { ObjectScript, Script, ScriptCollection } from './Script'
 
 /**
  * @param {ColorRepresentation} backgroundColor 背景颜色
@@ -32,6 +33,7 @@ export interface MainAppOptions {
   envMapType?: EnvMapType
   orbitControl?: boolean
   loadWhenConstruct?: boolean
+  showHelper?: boolean
 }
 
 /**
@@ -46,7 +48,7 @@ export interface MainAppOptions {
  * @param {MainAppOptions} options 构造函数参数
  * @method load 开始加载场景
  */
-export class MainApp {
+export class MainApp implements Script {
   scene: Scene
   mainCamera: PerspectiveCamera
   renderer: WebGLRenderer
@@ -60,8 +62,6 @@ export class MainApp {
   container: HTMLDivElement
   options: MainAppOptions
   private _lookAt: Vector3 = new Vector3(0, 0, 0)
-
-  create() {}
 
   constructor(options: MainAppOptions) {
     this.container = document.createElement('div')
@@ -96,9 +96,33 @@ export class MainApp {
     this.options = options
 
     const { loadWhenConstruct = true } = this.options
-    if (loadWhenConstruct)
-      /* 加载资源 */
-      this.load()
+    if (loadWhenConstruct) this.loadWithLifecycle()
+  }
+
+  helper() {
+    this.traverseObjectScript(this.scene, (script) => script.helper(this.scene))
+  }
+
+  beforeRender() {
+    this.traverseObjectScript(this.scene, (script) => script.beforeRender())
+  }
+
+  loadWithLifecycle() {
+    this.awaked()
+    /* 加载资源 */
+    this.load().then(() => {
+      this.created()
+      this.beforeRender()
+      if (this.options.showHelper) this.helper()
+    })
+  }
+
+  awaked() {
+    this.traverseObjectScript(this.scene, (script) => script.awaked())
+  }
+
+  created() {
+    this.traverseObjectScript(this.scene, (script) => script.created())
   }
 
   /* 创建并设置 renderer */
@@ -150,25 +174,35 @@ export class MainApp {
     this.render()
   }
 
-  render() {
-    const dt = this.clock.getDelta()
-    const t = this.clock.getElapsedTime()
-    const renderObject = (value?: Object3D) => {
-      if (!value) return
-      const script = Reflect.get(value, 'script')
-      if (script) {
-        script.render(t, dt)
+  /* 遍历场景并执行对应脚本函数 */
+  traverseObjectScript = (
+    value?: Object3D,
+    callback?: (script: ObjectScript) => void
+  ) => {
+    if (!value) return
+    const scriptCollection = Reflect.get(value, ScriptCollection)
+    if (scriptCollection) {
+      Object.keys(scriptCollection).forEach((n) => {
+        const script = scriptCollection[n] as ObjectScript
+        callback && callback(script)
         Reflect.set(script, 'freeze', false)
-      }
-      value.children.forEach(renderObject)
+      })
     }
-    renderObject(this.scene)
-    this.mixers.forEach((mixer) => mixer.update(dt))
+    value.children.forEach((value) =>
+      this.traverseObjectScript(value, callback)
+    )
+  }
+
+  render() {
+    this.dt = this.clock.getDelta()
+    this.t = this.clock.getElapsedTime()
+    this.traverseObjectScript(this.scene, (script) =>
+      script.render(this.t, this.dt)
+    )
+    this.mixers.forEach((mixer) => mixer.update(this.dt))
     if (this.composer) this.composer.render()
     else this.renderer.render(this.scene, this.mainCamera)
     this.orbitControl?.update()
-    this.dt = dt
-    this.t = t
   }
 
   /* 设置环境贴图 */

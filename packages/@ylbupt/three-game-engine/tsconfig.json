@@ -24,6 +24,12 @@
       "@ylbupt/three-game-engine/*": ["src/*"]
     }
   },
-  "include": ["main.ts", "src", "start-demo/**/*.ts", "vite-env.d.ts"],
+  "include": [
+    "main.ts",
+    "src",
+    "start-demo/**/*.ts",
+    "vite-env.d.ts",
+    "types/**/*.d.ts"
+  ],
   "exclude": ["node_modules", "dist", "build"]
 }

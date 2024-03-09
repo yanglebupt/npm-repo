@@ -42,3 +42,8 @@ export const random = (min: number, max: number) => {
   const range = max - min
   return Math.random() * range + min
 }
+
+export const round = (number: number, precision: number) => {
+  //@ts-ignore
+  return Math.round(+number + 'e' + precision) / Math.pow(10, precision)
+}

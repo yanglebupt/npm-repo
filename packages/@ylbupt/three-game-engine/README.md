@@ -16,7 +16,7 @@ npm i @ylbupt/three-game-engine
 
 # 更多文档
 
-<a href="./docs/tools.md">tools</a>，<a href="./docs/AnimationModel.md">AnimationModel</a>，<a href="./docs/Coordinate.md">Coordinate</a>，<a href="./docs/LoaderBar.md">LoaderBar</a>，<a href="./docs/Script.md">Script</a>，
+<a href="./docs/tools.md">tools</a>，<a href="./docs/AnimationModel.md">AnimationModel</a>，<a href="./docs/Coordinate.md">Coordinate</a>，<a href="./docs/LoaderBar.md">LoaderBar</a>，<a href="./docs/Script.md">Script</a>，<a href="./docs/Collider.md">Collider</a>
 
 # 主要 API
 

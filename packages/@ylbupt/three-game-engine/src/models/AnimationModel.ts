@@ -6,12 +6,13 @@ import {
   Box3Helper,
   Group,
   LoadingManager,
-  Object3D
+  Object3D,
+  Scene
 } from 'three'
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader'
 import { LoadGLTFOptions, loadGLTFModel } from '../tools/loader'
-import { Script } from '../types'
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils'
+import { Script } from './Script'
 
 /**
  * @param {GLTF} model gltf 模型
@@ -114,7 +115,7 @@ export class InstanceModel {
  * @method setSpeed 设置动画播放速度
  * @method loopAllActions 循环播放所有动画
  */
-export class AnimationModel extends InstanceModel implements Script {
+export class AnimationModel extends InstanceModel {
   mixer: AnimationMixer | null = null
   namedAnimationClip = {}
   loaded: boolean = false

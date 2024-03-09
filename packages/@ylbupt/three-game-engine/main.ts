@@ -7,7 +7,8 @@ _SceneManager.addScene(
   () =>
     new MyApp({
       orbitControl: true,
-      loadWhenConstruct: false
+      loadWhenConstruct: false,
+      showHelper: true
     })
 )
 
