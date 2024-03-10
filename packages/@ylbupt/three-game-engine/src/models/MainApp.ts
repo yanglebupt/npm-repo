@@ -23,7 +23,6 @@ import { ObjectScript, Script, ScriptCollection } from './Script'
  * @param {string} envMapPath 天空环境贴图路径
  * @param {EnvMapType} envMapType cube 类型，还是 hdr 类型
  * @param {boolean} orbitControl 是否启用控制器
- * @param {boolean} loadWhenConstruct 是否在构造时进行 load
  */
 export interface MainAppOptions {
   backgroundColor?: ColorRepresentation
@@ -32,7 +31,6 @@ export interface MainAppOptions {
   envMapPath?: string
   envMapType?: EnvMapType
   orbitControl?: boolean
-  loadWhenConstruct?: boolean
   showHelper?: boolean
 }
 
