@@ -12,7 +12,7 @@ import {
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader'
 import { LoadGLTFOptions, loadGLTFModel } from '../tools/loader'
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils'
-import { Script } from './Script'
+import { ScriptCollection, ScriptMethods } from './Script'
 
 /**
  * @param {GLTF} model gltf 模型
@@ -59,6 +59,7 @@ export class InstanceModel {
     this.needBox = needBox
     this.loadingManager = loadingManager ?? new LoadingManager()
     this.options = options
+    Object.setPrototypeOf(this.getPrototype(), new ScriptMethods())
   }
 
   load(): Promise<void>
@@ -69,12 +70,16 @@ export class InstanceModel {
       (await loadGLTFModel(this.path, true, this.loadingManager, this.options))
     if (this.needBox) this.makeBox(this.getRootObject())
     if (this.name) this.getRootObject()!.name = this.name
+    const target = this.getRootObject()!
+    Object.setPrototypeOf(this.getPrototype(), target)
+    Reflect.set(target, ScriptCollection, Reflect.get(this, ScriptCollection))
+    Reflect.deleteProperty(this, ScriptCollection)
+  }
+
+  getPrototype() {
     const proto = Object.getPrototypeOf(this)
     const proto_proto = Object.getPrototypeOf(proto)
-    Object.setPrototypeOf(
-      Object.getPrototypeOf(proto_proto) === null ? proto : proto_proto,
-      this.getRootObject()!
-    )
+    return Object.getPrototypeOf(proto_proto) === null ? proto : proto_proto
   }
 
   getRootObject() {

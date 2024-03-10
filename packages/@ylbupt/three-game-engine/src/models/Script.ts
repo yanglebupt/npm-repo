@@ -8,7 +8,6 @@ import { InstanceModel } from './AnimationModel'
 export interface Script {
   awaked(): void
   created(): void
-  beforeRender(): void
   render(time: number, dt?: number): void
   helper(scene?: Scene): void
 }
@@ -34,7 +33,6 @@ export abstract class ObjectScript<
     this.uuid = v4()
   }
   helper(scene?: Scene) {}
-  beforeRender() {}
   awaked() {}
   created() {}
   render(time: number, dt?: number) {}
@@ -75,26 +73,53 @@ export abstract class ObjectScript<
 
 export const ScriptCollection = Symbol('scripts')
 
-Object3D.prototype.getScriptTarget = function () {
-  let target = this
-  if (this instanceof InstanceModel) {
-    const root = this.getRootObject()
-    if (!root) throw new Error('Please load before add script')
-    target = root
+export class ScriptMethods {
+  addScript<T extends ObjectScript<O>, O extends ObjectScriptOptions>(
+    script: new (object: Object3D, options?: O) => T,
+    options?: O
+  ): T {
+    const target = this as any
+    const s = new script(target, options)
+    let scriptCollection = Reflect.get(target, ScriptCollection)
+    if (!scriptCollection) {
+      scriptCollection = {}
+      Reflect.set(target, ScriptCollection, scriptCollection)
+    }
+    Reflect.set(scriptCollection, script.name, s)
+    return s
   }
-  return target
+  getScript<T extends ObjectScript>(
+    script: new (object: Object3D) => T
+  ): T | null {
+    let scriptCollection = Reflect.get(this, ScriptCollection)
+    if (!scriptCollection) {
+      return null
+    } else {
+      return Reflect.get(scriptCollection, script.name) as T
+    }
+  }
+  removeScript<T extends ObjectScript>(script: new (object: Object3D) => T) {
+    let scriptCollection = Reflect.get(this, ScriptCollection)
+    if (!scriptCollection) {
+      return true
+    } else {
+      return Reflect.deleteProperty(scriptCollection, script.name)
+    }
+  }
+  clearScript() {
+    return Reflect.deleteProperty(this, ScriptCollection)
+  }
 }
 
 Object3D.prototype.addScript = function <
   T extends ObjectScript<O>,
   O extends ObjectScriptOptions
 >(script: new (object: Object3D, options?: O) => T, options?: O): T {
-  const target = this.getScriptTarget()
-  const s = new script(target, options)
-  let scriptCollection = Reflect.get(target, ScriptCollection)
+  const s = new script(this, options)
+  let scriptCollection = Reflect.get(this, ScriptCollection)
   if (!scriptCollection) {
     scriptCollection = {}
-    Reflect.set(target, ScriptCollection, scriptCollection)
+    Reflect.set(this, ScriptCollection, scriptCollection)
   }
   Reflect.set(scriptCollection, script.name, s)
   return s
@@ -103,8 +128,7 @@ Object3D.prototype.addScript = function <
 Object3D.prototype.getScript = function <T extends ObjectScript>(
   script: new (object: Object3D) => T
 ): T | null {
-  const target = this.getScriptTarget()
-  let scriptCollection = Reflect.get(target, ScriptCollection)
+  let scriptCollection = Reflect.get(this, ScriptCollection)
   if (!scriptCollection) {
     return null
   } else {
@@ -115,8 +139,7 @@ Object3D.prototype.getScript = function <T extends ObjectScript>(
 Object3D.prototype.removeScript = function <T extends ObjectScript>(
   script: new (object: Object3D) => T
 ) {
-  const target = this.getScriptTarget()
-  let scriptCollection = Reflect.get(target, ScriptCollection)
+  let scriptCollection = Reflect.get(this, ScriptCollection)
   if (!scriptCollection) {
     return true
   } else {
@@ -125,6 +148,5 @@ Object3D.prototype.removeScript = function <T extends ObjectScript>(
 }
 
 Object3D.prototype.clearScript = function () {
-  const target = this.getScriptTarget()
-  return Reflect.deleteProperty(target, ScriptCollection)
+  return Reflect.deleteProperty(this, ScriptCollection)
 }

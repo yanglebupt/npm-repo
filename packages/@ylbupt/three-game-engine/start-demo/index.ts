@@ -27,10 +27,9 @@ export class MyApp extends MainApp {
   model: AnimationModel
   loaderBar: LoaderBar
   collider_1: ColliderScript
-  collider_2: ColliderScript | null = null
-  constructor(options: MainAppOptions) {
-    super(options)
+  collider_2: ColliderScript
 
+  mounted() {
     /* 进度条 */
     this.loaderBar = new LoaderBar(new LoaderBarDomElement())
     /* 收集 LoadingManager */
@@ -75,13 +74,16 @@ export class MyApp extends MainApp {
       loadingManager_2
     )
     this.loaderBar.addLoadingManager('manager-2', loadingManager_2)
+    /* 挂载脚本 */
+    this.model.addScript<RotateScript>(RotateScript, {
+      dir: 'x'
+    })
+    /* 挂载碰撞器 */
+    this.collider_2 = this.model.addScript<ColliderScript>(ColliderScript)
 
     /* 添加环境光，照亮模型 */
     const ambient = new HemisphereLight(0xffffff)
     this.scene.add(ambient)
-
-    /* 手动 load 资源 */
-    this.loadWithLifecycle()
   }
 
   async load() {
@@ -96,22 +98,8 @@ export class MyApp extends MainApp {
     this.scene.add(this.model.getRootObject()!)
     this.mixers.push(this.model.mixer!)
     this.model.loopAllActions(3000)
-    // this.model.position.set(0, 2, 0) /* 注意只有在 load 之后才可以操作 */
 
     this.loaderBar.hidden()
-  }
-
-  created() {
-    /* 挂载脚本 */
-    this.model.addScript<RotateScript>(RotateScript, {
-      dir: 'x'
-    })
-    /* 挂载碰撞器 */
-    this.collider_2 =
-      this.model.addScript<ColliderScript>(
-        ColliderScript
-      ) /* 在 create 之前 添加脚本，之后才可以执行脚本的生命周期函数 */
-    super.created()
   }
 
   render() {

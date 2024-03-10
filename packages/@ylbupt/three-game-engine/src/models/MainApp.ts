@@ -53,7 +53,7 @@ export class MainApp implements Script {
   mainCamera: PerspectiveCamera
   renderer: WebGLRenderer
   composer: EffectComposer | null = null
-  orbitControl: OrbitControls | null
+  orbitControl: OrbitControls | null = null
   clock: Clock
   dt: number = 0
   t: number = 0
@@ -94,27 +94,22 @@ export class MainApp implements Script {
     this.clock = new Clock()
     this.loadingManager = new LoadingManager()
     this.options = options
-
-    const { loadWhenConstruct = true } = this.options
-    if (loadWhenConstruct) this.loadWithLifecycle()
   }
 
-  helper() {
-    this.traverseObjectScript(this.scene, (script) => script.helper(this.scene))
-  }
-
-  beforeRender() {
-    this.traverseObjectScript(this.scene, (script) => script.beforeRender())
-  }
+  mounted() {}
 
   loadWithLifecycle() {
     this.awaked()
     /* 加载资源 */
     this.load().then(() => {
       this.created()
-      this.beforeRender()
       if (this.options.showHelper) this.helper()
+      this.renderer.setAnimationLoop(this.render.bind(this))
     })
+  }
+
+  helper() {
+    this.traverseObjectScript(this.scene, (script) => script.helper(this.scene))
   }
 
   awaked() {
@@ -137,7 +132,6 @@ export class MainApp implements Script {
     if (renderer.outputColorSpace) {
       renderer.outputColorSpace = SRGBColorSpace
     }
-    renderer.setAnimationLoop(this.render.bind(this))
     return renderer
   }
 

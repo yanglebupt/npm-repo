@@ -14,8 +14,14 @@ export class SceneManager {
     // 清空当前场景
     window.app?.destroy()
     // 新建 id 场景
-    const app = createScene()
+    const app = bootstrap(createScene())
     window.app = app
     return app
   }
+}
+
+export function bootstrap(app: MainApp) {
+  app.mounted()
+  app.loadWithLifecycle()
+  return app
 }
