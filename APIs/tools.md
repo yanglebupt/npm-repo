@@ -1,11 +1,12 @@
-## Tools
+# Tools
+
 该模块提供了一些常用方法
 
-### common
+## common
 
-#### waitUnitCondition
+#### waitUnitCondition()
 
-轮询直到 `conditionFn` 返回 `conditionFn`，`gasp` 参数设置轮询间隔
+轮询直到 `conditionFn` 返回 `true`，`gasp` 参数设置轮询间隔
 
 ```typescript
 function waitUnitCondition(
@@ -14,8 +15,7 @@ function waitUnitCondition(
 ) => Promise
 ```
 
-
-#### forIter
+#### forIter()
 
 遍历迭代器对象，例如 `Map.keys()`
 
@@ -23,20 +23,20 @@ function waitUnitCondition(
 function forIter<T>(
   iter: IterableIterator<T>,
   callback: (value?: T) => void
-)
+) => void
 ```
 
-#### iter2list
+#### iter2list()
 
 迭代器转数组
 
 ```typescript
 function iter2list<T>(
   iter: IterableIterator<T>
-)
+) => T[]
 ```
 
-#### clamp
+#### clamp()
 
 ```typescript
 function clamp(
@@ -44,7 +44,7 @@ function clamp(
 ) => number
 ```
 
-#### random
+#### random()
 
 ```typescript
 function random(
@@ -52,10 +52,9 @@ function random(
 ) => number
 ```
 
+## loader
 
-### loader
-
-#### loadGLTFModel
+#### loadGLTFModel()
 
 加载 `GLTF` 模型文件
 
@@ -72,9 +71,9 @@ async function loadGLTFModel(
 ) => Promise<GLTF>
 ```
 
-#### loadHDRTexture
+#### loadHDRTexture()
 
-加载 `HDR` 贴图，可以是 `Cube` 的8个面，命令方式如下
+加载 `HDR` 贴图，可以是 `Cube` 的 8 个面，命名方式如下
 
 ```
 ['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']
@@ -90,9 +89,9 @@ async function loadHDRTexture(
 ) => Promise<Texture>
 ```
 
-#### loadTexture
+#### loadTexture()
 
-加载普通贴图，被设置贴图属性
+加载普通贴图，同时设置贴图属性
 
 ```typescript
  function loadTexture(
@@ -102,9 +101,11 @@ async function loadHDRTexture(
 ) => Texture 
 ```
 
-### geometry
+## geometry
 
 一些自定义的可编程的几何物体
+
+#### createStarGeometry()
 
 ```typescript
 function createStarGeometry(

@@ -1,9 +1,17 @@
+# SoundManager
 
-### SoundManager
+该类可以统一管理一组音频，并对其中的音频进行播放、暂停、查询状态等基本操作
 
-#### options
+## Constructor
 
-构造方法可接受的参数类型为
+```typescript
+constructor(
+  name: string,
+  path: string,
+  sounds: AudioOptions[],
+  loadingManager: LoadingManager
+)
+```
 
 | 属性 | 描述 | 类型 |	默认值 |
 |:--------|:---------:|:---------:|--------:|
@@ -12,7 +20,7 @@
 | `sounds` | 音频选项数组 | `AudioOptions[]` | 必须 |
 | `loadingManager` | 加载管理者 | `LoadingManager` | 必须 |
 
-其中音频选项类型 `AudioOptions` 为
+其中音频选项类型 `AudioOptions` 如下
 
 ```typescript
 export interface AudioOptions {
@@ -23,14 +31,18 @@ export interface AudioOptions {
 }
 ```
 
-#### Attributes and Methods
+## Attributes 
 
 | 属性 | 描述 | 类型 |	默认值 |
 |:--------|:---------:|:---------:|--------:|
 | `audioListener` | 声音监听器 | `AudioListener` ||
 | `audioLoader` | 声音加载器 | `AudioLoader` ||
 
-基本的方法都是根据 `音频名字(name)` 调整音频属性
+注意对于设置了 `isPosition=true`，需要将 `audioListener` 添加到相机上
+
+## Methods
+
+方法都是根据音频唯一名字 `name` 来调整音频属性
 
 - `setVolume(name: string, volume?: number)`
 - `setLoop(name: string, loop?: number)`
@@ -41,23 +53,31 @@ export interface AudioOptions {
 - `stopAll()`
 - `async load()` 开始加载资源
 
-注意别忘了在所属类中的 `load()` 方法中调用 `this.soundManager.load()`，同时对于位置声音，需要将 `this.soundManager.audioListener` 添加到相机上
-
 使用例子如下
 
 ```typescript
-this.loadingManager = new LoadingManager()
-// 加载声音
-this.soundManager = new SoundManager(
-  'sound-group-01',
-  '/src/assets/plane/',
-  [
-    { name: 'engine.mp3', loop: true, volume: 1 },
-    { name: 'bonus.mp3' },
-    { name: 'explosion.mp3' },
-    { name: 'gliss.mp3' },
-    { name: 'gameover.mp3' }
-  ],
-  this.loadingManager
-)
+mounted(){
+  this.loadingManager = new LoadingManager()
+  this.soundManager = new SoundManager(
+    'sound-group-01',
+    '/src/assets/plane/',
+    [
+      { name: 'engine.mp3', loop: true, volume: 1 },
+      { name: 'bonus.mp3' },
+      { name: 'explosion.mp3' },
+      { name: 'gliss.mp3' },
+      { name: 'gameover.mp3' }
+    ],
+    this.loadingManager
+  )
+}
+
+async load(){
+  await Promise.all([
+    super.load(),
+    this.soundManager.load()
+  ])
+
+  this.soundManager.play("engine.mp3")
+}
 ```

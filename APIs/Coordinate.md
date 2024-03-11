@@ -1,8 +1,8 @@
-## Coordinate
+# Coordinate
 
 该模块提供了一些常用的坐标和向量操作方法
 
-### Direction
+## Direction
 
 提供了一些基本方向的定义
 
@@ -17,7 +17,7 @@ export class Direction {
 }
 ```
 
-### ClampVector2
+## ClampVector2
 
 永远将一个向量进行 `clamp` 操作
 
@@ -32,8 +32,8 @@ constructor(
 
 分量 `x/y`，都是以 `getter` 和 `setter` 的形式进行读取或者修改，在修改时会自动进行 `clamp` 操作，包括构造函数传入的初始 `x/y`
 
-### Coordinate
+## Coordinate
 
 该类实现了不同坐标系之间转换的静态方法
 
-- `window2ndc(point: Vector2)`
+#### window2ndc()

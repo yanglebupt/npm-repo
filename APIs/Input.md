@@ -1,27 +1,42 @@
-
-### Input
+# Input
 
 用来统一管理事件监听的类
 
-#### options
+## Constructor
 
 构造方法可接受的参数类型为
 
 ```typescript
-constructor(keys: (keyof DocumentEventMap)[], fns?: ((evt: Event) => void)[])  // 数组形式
+
+export type EventKey = keyof DocumentEventMap
+export type EventFunc = (evt: Event) => void
+export type KeyFnPair<T> = {
+  [P in keyof T]?: EventFunc
+}
+
+constructor(keys: EventKey[], fns: EventFunc[])  // 数组形式
 constructor(KeyFnPair: KeyFnPair<DocumentEventMap>)  // 对象形式
 ```
 
-#### Methods
+## Methods
+
 - `addEventListener(k: EventKey, fn: EventFunc)` 添加一个监听
-- `removeEventListener(k: keyof DocumentEventMap)` 取消监听
+- `removeEventListener(k: EventKey)` 取消监听
+- `removeAllEventListener()` 取消所有监听
 
 
 使用例子如下
 
 ```typescript
-this.input = new Input({
-  click: this.onClick.bind(this),
-  mousedown: this.onMousedown.bind(this)
-})
+mounted(){
+  this.input = new Input({
+    click: this.onClick.bind(this)
+  })
+}
+onClick(){
+  // code
+}
+beforeDestroy(){
+  this.input.removeAllEventListener()
+}
 ```
