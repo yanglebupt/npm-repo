@@ -19,6 +19,18 @@
     "declarationDir": "./dist",
     "outDir": "./dist"
   },
-  "include": ["src", "vite-env.d.ts", "types/**/*.d.ts"],
-  "exclude": ["node_modules", "dist", "build"]
+  "include": [
+    "src/index.ts",
+    "src/models",
+    "src/tools",
+    "vite-env.d.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "src/models/cannon/**/*.ts",
+    "src/models/FollowCamera.ts"
+  ]
 }
