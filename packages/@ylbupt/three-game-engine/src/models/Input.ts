@@ -16,7 +16,7 @@ export class Input {
   fns: EventFunc[] | undefined
   key2event: Map<EventKey, Event> = new Map()
   key2fn: Map<EventKey, EventFunc> = new Map()
-  constructor(keys: EventKey[], fns?: EventFunc[])
+  constructor(keys: EventKey[], fns: EventFunc[])
   constructor(KeyFnPair: KeyFnPair<DocumentEventMap>)
   constructor(
     keysOrKeyFnPair: EventKey[] | KeyFnPair<DocumentEventMap>,

@@ -95,6 +95,7 @@ export class MainApp implements Script {
   }
 
   mounted() {}
+  beforeDestroy() {}
 
   loadWithLifecycle() {
     this.awaked()
@@ -116,6 +117,10 @@ export class MainApp implements Script {
 
   created() {
     this.traverseObjectScript(this.scene, (script) => script.created())
+  }
+
+  _beforeDestroy() {
+    this.traverseObjectScript(this.scene, (script) => script.beforeDestroy())
   }
 
   /* 创建并设置 renderer */
@@ -210,6 +215,8 @@ export class MainApp implements Script {
   }
 
   destroy() {
+    this.beforeDestroy()
+    this._beforeDestroy()
     this.renderer.setAnimationLoop(null)
     this.scene.traverse((child) => {
       // @ts-ignore

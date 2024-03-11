@@ -1,6 +1,5 @@
 import { Object3D, Scene, Vector3 } from 'three'
 import { v4 } from 'uuid'
-import { InstanceModel } from './AnimationModel'
 
 /**
  * 模型脚本基类，必须要有 render 方法进行更新
@@ -10,6 +9,7 @@ export interface Script {
   created(): void
   render(time: number, dt?: number): void
   helper(scene?: Scene): void
+  beforeDestroy(): void
 }
 
 export interface ObjectScriptOptions {}
@@ -36,6 +36,7 @@ export abstract class ObjectScript<
   awaked() {}
   created() {}
   render(time: number, dt?: number) {}
+  beforeDestroy() {}
   // 移动到目标位置
   moveToTarget(
     target: Vector3,

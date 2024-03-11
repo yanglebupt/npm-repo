@@ -11,4 +11,4 @@ _SceneManager.addScene(
     })
 )
 
-const app = _SceneManager.load(1)
+const app = _SceneManager.loadScene(1)

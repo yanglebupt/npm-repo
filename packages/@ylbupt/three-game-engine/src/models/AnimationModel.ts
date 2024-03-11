@@ -6,8 +6,7 @@ import {
   Box3Helper,
   Group,
   LoadingManager,
-  Object3D,
-  Scene
+  Object3D
 } from 'three'
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader'
 import { LoadGLTFOptions, loadGLTFModel } from '../tools/loader'
@@ -225,69 +224,6 @@ export function cloneGLTF(
   return cloned
 }
 
-// 包括骨骼的克隆
-// export function cloneGLTF(
-//   gltf: Partial<GLTF>,
-//   isAnimationSkin = true,
-//   deleteObjectNames?: string[] | string
-// ): Partial<GLTF> {
-//   const deletedNames = Array.isArray(deleteObjectNames)
-//     ? deleteObjectNames
-//     : [deleteObjectNames]
-
-//   const clone = isAnimationSkin
-//     ? {
-//         animations: gltf.animations,
-//         scene: gltf.scene?.clone(true)
-//       }
-//     : { scene: gltf.scene?.clone(true) }
-
-//   if (deleteObjectNames)
-//     // 删除一些不需要克隆的物体
-//     (deletedNames as string[]).forEach((name) =>
-//       clone.scene?.getObjectByName(name)?.removeFromParent()
-//     )
-
-//   if (!isAnimationSkin) return clone
-
-//   const skinnedMeshes: any = {}
-
-//   gltf.scene?.traverse((node: any) => {
-//     if (node.isSkinnedMesh) {
-//       skinnedMeshes[node.name] = node
-//     }
-//   })
-
-//   const cloneBones: any = {}
-//   const cloneSkinnedMeshes: any = {}
-
-//   clone.scene?.traverse((node: any) => {
-//     if (node.isBone) {
-//       cloneBones[node.name] = node
-//     }
-//     if (node.isSkinnedMesh) {
-//       cloneSkinnedMeshes[node.name] = node
-//     }
-//   })
-
-//   for (let name in skinnedMeshes) {
-//     const skinnedMesh = skinnedMeshes[name]
-//     const skeleton = skinnedMesh.skeleton
-//     const cloneSkinnedMesh = cloneSkinnedMeshes[name]
-//     const orderedCloneBones = []
-//     for (let i = 0; i < skeleton.bones.length; ++i) {
-//       const cloneBone = cloneBones[skeleton.bones[i].name]
-//       orderedCloneBones.push(cloneBone)
-//     }
-//     cloneSkinnedMesh.bind(
-//       new Skeleton(orderedCloneBones, skeleton.boneInverses),
-//       cloneSkinnedMesh.matrixWorld
-//     )
-//   }
-
-//   return clone
-// }
-
 // 从一个已经存在的模型，克隆模型
 export function cloneModel<T extends InstanceModel = InstanceModel>(
   model: T,
@@ -303,28 +239,4 @@ export function cloneModel<T extends InstanceModel = InstanceModel>(
     needBox
   ) as T
   return clonedModel
-}
-
-export function ProxyInstanceModel<T extends InstanceModel>(model: T) {
-  const root = model.getRootObject()!
-  // return new Proxy(model, {
-  //   get(target: T, p: string) {
-  //     return WrapAttributeAndMethod(
-  //       Object.hasOwn(target, p) ? target : root,
-  //       p,
-  //       root
-  //     )
-  //   }
-  // })
-  Object.setPrototypeOf(model, root)
-  return model
-}
-
-export function WrapAttributeAndMethod(
-  target: object,
-  p: string,
-  binding: object
-) {
-  const v = Reflect.get(target, p)
-  return v && v.bind ? v.bind(binding) : v
 }
