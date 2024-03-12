@@ -22,7 +22,7 @@ export const forIter = <T>(
   }
 }
 
-// 迭代器装换成数组
+// 迭代器装换成数组，用来遍历 Map 对象
 export const iter2list = <T>(iter: IterableIterator<T>) => {
   const list: T[] = []
   let _done: boolean | undefined = false
@@ -41,4 +41,9 @@ export const clamp = (v: number, min: number, max: number) => {
 export const random = (min: number, max: number) => {
   const range = max - min
   return Math.random() * range + min
+}
+
+export const round = (number: number, precision: number) => {
+  //@ts-ignore
+  return Math.round(+number + 'e' + precision) / Math.pow(10, precision)
 }

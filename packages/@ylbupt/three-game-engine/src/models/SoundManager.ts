@@ -29,14 +29,14 @@ export class SoundManager {
     name: string,
     path: string,
     sounds: AudioOptions[],
-    manager: LoadingManager
+    loadingManager: LoadingManager
   ) {
     this.name = name
     this.path = path
     this.sounds = sounds
     // 创建 AudioListener
     this.audioListener = new AudioListener()
-    this.audioLoader = new AudioLoader(manager)
+    this.audioLoader = new AudioLoader(loadingManager)
     this.audioLoader.setPath(path)
   }
 
@@ -97,6 +97,11 @@ export class SoundManager {
     if (sound && !sound.isPlaying) {
       sound.play()
     }
+  }
+
+  isPlaying(name: string) {
+    const sound = this.namedSound.get(name)
+    return sound?.isPlaying
   }
 
   stop(name: string) {

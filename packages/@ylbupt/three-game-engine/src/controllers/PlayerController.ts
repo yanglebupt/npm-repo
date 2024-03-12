@@ -1,9 +1,9 @@
 import { Mesh, Object3D, Raycaster } from 'three'
 import { ClampVector2, Direction } from '../models/Coordinate'
-import { ObjectScript } from '../types'
 import { AnimationModel } from '../models/AnimationModel'
 import { Input } from '../models/Input'
 import { JoyStick } from '../libs/JoyStick'
+import { ObjectScript } from '../models/Script'
 
 export interface PlayerControllerOptions {
   speed: number

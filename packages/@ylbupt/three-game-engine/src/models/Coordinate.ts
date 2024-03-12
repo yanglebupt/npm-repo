@@ -59,4 +59,7 @@ export class Direction {
   static up = new Vector3(0, 1, 0)
   static down = new Vector3(0, -1, 0)
   static forward = new Vector3(0, 0, 1)
+  static back = new Vector3(0, 0, -1)
+  static left = new Vector3(-1, 0, 0)
+  static right = new Vector3(1, 0, 0)
 }

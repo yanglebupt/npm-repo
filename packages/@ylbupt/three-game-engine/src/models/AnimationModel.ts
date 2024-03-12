@@ -6,143 +6,104 @@ import {
   Box3Helper,
   Group,
   LoadingManager,
-  Object3D,
-  Skeleton
+  Object3D
 } from 'three'
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader'
-import { loadGLTFModel } from '../tools/loader'
+import { LoadGLTFOptions, loadGLTFModel } from '../tools/loader'
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils'
+import { ScriptCollection, ScriptMethods } from './Script'
 
 /**
  * @param {GLTF} model gltf 模型
- * @param {LoadingManager} manager 模型加载进度管理器
+ * @param {LoadingManager} loadingManager 模型加载进度管理器
  * @param {string} path 模型地址
  * @method load 加载模型
- * @method setManager 设置另外的进度管理器
  */
-class InstanceModel {
-  model: GLTF | null = null
-  manager: LoadingManager = new LoadingManager()
+export interface InstanceModel extends Group {}
+export class InstanceModel {
+  model: GLTF | Partial<GLTF> | null = null
+  loadingManager: LoadingManager
   path: string
   name: string
   needBox: boolean
   box: Box3 | null = null
+  boxHelper: Box3Helper | null = null
+  options?: LoadGLTFOptions
 
-  constructor(path: string, name: string, needBox = false) {
+  static createFromGLTF<T extends InstanceModel>(
+    constructor: new (
+      path: string,
+      name: string,
+      needBox?: boolean,
+      loadingManager?: LoadingManager
+    ) => T,
+    gltf: Partial<GLTF>,
+    name: string,
+    needBox = false
+  ): T {
+    const model = new constructor('', name, needBox)
+    model.load(gltf)
+    return model
+  }
+
+  constructor(
+    path: string,
+    name: string,
+    needBox = false,
+    loadingManager?: LoadingManager,
+    options?: LoadGLTFOptions
+  ) {
     this.path = path
     this.name = name
     this.needBox = needBox
+    this.loadingManager = loadingManager ?? new LoadingManager()
+    this.options = options
+    Object.setPrototypeOf(this.getPrototype(), new ScriptMethods())
   }
 
-  async load() {
-    const model = await loadGLTFModel(this.path, true, this.manager)
-    this.model = model
+  load(): Promise<void>
+  load(model: Partial<GLTF>): Promise<void>
+  async load(model?: Partial<GLTF>) {
+    this.model =
+      model ??
+      (await loadGLTFModel(this.path, true, this.loadingManager, this.options))
     if (this.needBox) this.makeBox(this.getRootObject())
     if (this.name) this.getRootObject()!.name = this.name
+    const target = this.getRootObject()!
+    Object.setPrototypeOf(this.getPrototype(), target)
+    Reflect.set(target, ScriptCollection, Reflect.get(this, ScriptCollection))
+    Reflect.deleteProperty(this, ScriptCollection)
   }
 
-  setManager(manager: LoadingManager) {
-    this.manager = manager
+  getPrototype() {
+    const proto = Object.getPrototypeOf(this)
+    const proto_proto = Object.getPrototypeOf(proto)
+    return Object.getPrototypeOf(proto_proto) === null ? proto : proto_proto
   }
 
   getRootObject() {
     return this.model?.scene
   }
 
+  // 制作包围盒，已经存在则返回
   makeBox(object: Object3D | null | undefined) {
-    if (!object) return
+    if (!object || this.box) return
     // 添加包围盒
-    const box = new Box3().setFromObject(object)
-    this.box = box
-    const boxHelper = new Box3Helper(box)
-    boxHelper.name = `${this.name}-box`
-    object.add(boxHelper)
-  }
-}
-
-class CloneInstanceModel<T = InstanceModel> {
-  model: InstanceModel
-  needBox: boolean
-  name: string
-  cloneGLTF: boolean
-  rootObject: Group | null | undefined = null
-
-  constructor(
-    model: InstanceModel,
-    name = '',
-    needBox = false,
-    cloneGLTF = false
-  ) {
-    this.model = model
-    this.needBox = needBox
-    this.name = name
-    this.cloneGLTF = cloneGLTF
-    if (this.cloneGLTF) {
-      this.model = AnimationModel.createAnimationModel(
-        this._cloneGLTF(this.model.model!)
-      )
-    }
+    this.box = new Box3().setFromObject(object)
+    this.boxHelper = new Box3Helper(this.box)
+    this.boxHelper.name = `${this.name}-box`
+    object.add(this.boxHelper)
   }
 
-  // 方便获取场景，可以直接
-  getRootObject() {
-    if (!this.rootObject) {
-      const cloneObject = this.cloneGLTF
-        ? this.model.getRootObject()
-        : this.model.getRootObject()!.clone(true)
-      cloneObject!.name = this.name
-      if (this.needBox) this.model.makeBox(cloneObject)
-      this.rootObject = cloneObject
-    }
-    return this.rootObject
+  // 开启关闭包围盒
+  turnBoxHelper(open: boolean = false) {
+    if (!this.boxHelper) return
+    this.boxHelper.visible = open
   }
 
-  // 想要获取其他属性（例如动画），必须先获取内层属性 model 拿到实例对象
-  getClonedModel() {
-    return this.model as T
-  }
-
-  // 包括骨骼的克隆
-  _cloneGLTF(gltf: GLTF) {
-    const clone = {
-      animations: gltf.animations,
-      scene: gltf.scene.clone(true)
-    }
-
-    const skinnedMeshes: any = {}
-
-    gltf.scene.traverse((node: any) => {
-      if (node.isSkinnedMesh) {
-        skinnedMeshes[node.name] = node
-      }
-    })
-
-    const cloneBones: any = {}
-    const cloneSkinnedMeshes: any = {}
-
-    clone.scene.traverse((node: any) => {
-      if (node.isBone) {
-        cloneBones[node.name] = node
-      }
-      if (node.isSkinnedMesh) {
-        cloneSkinnedMeshes[node.name] = node
-      }
-    })
-
-    for (let name in skinnedMeshes) {
-      const skinnedMesh = skinnedMeshes[name]
-      const skeleton = skinnedMesh.skeleton
-      const cloneSkinnedMesh = cloneSkinnedMeshes[name]
-      const orderedCloneBones = []
-      for (let i = 0; i < skeleton.bones.length; ++i) {
-        const cloneBone = cloneBones[skeleton.bones[i].name]
-        orderedCloneBones.push(cloneBone)
-      }
-      cloneSkinnedMesh.bind(
-        new Skeleton(orderedCloneBones, skeleton.boneInverses),
-        cloneSkinnedMesh.matrixWorld
-      )
-    }
-    return clone
+  // 清除包围盒
+  removeBoxHelper() {
+    this.boxHelper?.removeFromParent()
   }
 }
 
@@ -158,40 +119,39 @@ class CloneInstanceModel<T = InstanceModel> {
  * @method setSpeed 设置动画播放速度
  * @method loopAllActions 循环播放所有动画
  */
-class AnimationModel extends InstanceModel {
-  model: GLTF | null = null
+export class AnimationModel extends InstanceModel {
   mixer: AnimationMixer | null = null
   namedAnimationClip = {}
   loaded: boolean = false
   actionNames: string[] = []
 
-  _actionIndex: number = -1
-  _action: AnimationAction | null = null
+  private _actionIndex: number = -1
+  private _action: AnimationAction | null = null
 
-  static createAnimationModel(gltf: Partial<GLTF>) {
-    gltf.animations
-    const model = AnimationModel.empty()
-    model.model = gltf as GLTF
-    model.initAnimations()
-    return model
+  constructor(
+    path: string,
+    name: string,
+    needBox = false,
+    loadingManager?: LoadingManager,
+    options?: LoadGLTFOptions
+  ) {
+    super(path, name, needBox, loadingManager, options)
   }
 
-  static empty() {
-    return new AnimationModel('', '')
+  render(time: number, dt: number) {
+    this.mixer?.update(dt)
   }
 
-  constructor(path: string, name: string, needBox?: boolean) {
-    super(path, name, needBox)
-  }
-
-  async load() {
-    await super.load()
+  load(): Promise<void>
+  load(model: Partial<GLTF>): Promise<void>
+  async load(model?: Partial<GLTF>) {
+    model ? super.load(model) : await super.load()
     this.initAnimations()
   }
 
-  initAnimations() {
-    this.mixer = new AnimationMixer(this.model!.scene)
-    this.model!.animations.forEach((clip) =>
+  private initAnimations() {
+    this.mixer = new AnimationMixer(this.getRootObject()!)
+    this.model!.animations?.forEach((clip) =>
       Reflect.set(this.namedAnimationClip, clip.name, clip)
     )
     this.actionNames = Object.keys(this.namedAnimationClip)
@@ -208,8 +168,8 @@ class AnimationModel extends InstanceModel {
     return this.mixer.clipAction(clip)
   }
 
-  setSpeed(speed: number) {
-    if (this.mixer) this.mixer!.timeScale = speed
+  setSpeed(timeScale: number) {
+    if (this.mixer) this.mixer!.timeScale = timeScale
   }
 
   loopAllActions(delay: number) {
@@ -233,6 +193,50 @@ class AnimationModel extends InstanceModel {
   get actionIndex() {
     return this._actionIndex
   }
+
+  get actionName() {
+    return this.actionNames[this._actionIndex]
+  }
 }
 
-export { AnimationModel, InstanceModel, CloneInstanceModel }
+export function cloneGLTF(
+  gltf: Partial<GLTF>,
+  isAnimationSkin = true,
+  deleteObjectNames?: string[] | string
+): Partial<GLTF> {
+  const deletedNames = Array.isArray(deleteObjectNames)
+    ? deleteObjectNames
+    : [deleteObjectNames]
+
+  const cloned = {
+    animations: gltf.animations,
+    scene: isAnimationSkin
+      ? (clone(gltf.scene!) as Group)
+      : gltf.scene?.clone(true)
+  }
+
+  if (deleteObjectNames)
+    // 删除一些不需要克隆的物体
+    (deletedNames as string[]).forEach((name) =>
+      cloned.scene?.getObjectByName(name)?.removeFromParent()
+    )
+
+  return cloned
+}
+
+// 从一个已经存在的模型，克隆模型
+export function cloneModel<T extends InstanceModel = InstanceModel>(
+  model: T,
+  name: string,
+  needBox = false
+): T {
+  const isAnimationModel = model instanceof AnimationModel
+  // 包围盒不能 clone
+  const clonedModel = InstanceModel.createFromGLTF(
+    isAnimationModel ? AnimationModel : InstanceModel,
+    cloneGLTF(model.model!, isAnimationModel, model.boxHelper?.name),
+    name,
+    needBox
+  ) as T
+  return clonedModel
+}
