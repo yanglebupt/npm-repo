@@ -14,7 +14,7 @@ npm i @ylbupt/three-game-engine
 
 - 支持较为完善的生命周期
 
-![life-cycle](./docs/APIs/images/life-cycle.png)
+![life-cycle](https://github.com/yanglebupt/npm-repo/blob/HEAD/packages/@ylbupt/three-game-engine/docs/APIs/images/life-cycle.png)
 
 - 支持导入外部 3D 对象，并支持挂载自定义脚本`Script`来控制 3D 对象
 
