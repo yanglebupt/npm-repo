@@ -1,5 +1,6 @@
 import { Object3D, Scene, Vector3 } from 'three'
 import { v4 } from 'uuid'
+import { InstanceModel } from './AnimationModel'
 
 /**
  * 模型脚本基类，必须要有 render 方法进行更新
@@ -72,7 +73,9 @@ export abstract class ObjectScript<
   }
 }
 
+///////////////// 新增的 Script 方法原型 //////////////////////
 export const ScriptCollection = Symbol('scripts')
+export const ExtendModelCollection = Symbol('extendModel')
 
 export class ScriptMethods {
   addScript<T extends ObjectScript<O>, O extends ObjectScriptOptions>(
@@ -112,42 +115,32 @@ export class ScriptMethods {
   }
 }
 
-Object3D.prototype.addScript = function <
-  T extends ObjectScript<O>,
-  O extends ObjectScriptOptions
->(script: new (object: Object3D, options?: O) => T, options?: O): T {
-  const s = new script(this, options)
-  let scriptCollection = Reflect.get(this, ScriptCollection)
-  if (!scriptCollection) {
-    scriptCollection = {}
-    Reflect.set(this, ScriptCollection, scriptCollection)
-  }
-  Reflect.set(scriptCollection, script.name, s)
-  return s
-}
+Object.assign(
+  Object3D.prototype,
+  Reflect.ownKeys(ScriptMethods.prototype)
+    .filter((k) => k != 'constructor')
+    .reduce((pre: any, k) => {
+      pre[k] = Reflect.get(ScriptMethods.prototype, k)
+      return pre
+    }, {})
+)
 
-Object3D.prototype.getScript = function <T extends ObjectScript>(
-  script: new (object: Object3D) => T
-): T | null {
-  let scriptCollection = Reflect.get(this, ScriptCollection)
-  if (!scriptCollection) {
-    return null
-  } else {
-    return Reflect.get(scriptCollection, script.name) as T
-  }
-}
-
-Object3D.prototype.removeScript = function <T extends ObjectScript>(
-  script: new (object: Object3D) => T
-) {
-  let scriptCollection = Reflect.get(this, ScriptCollection)
-  if (!scriptCollection) {
-    return true
-  } else {
-    return Reflect.deleteProperty(scriptCollection, script.name)
-  }
-}
-
-Object3D.prototype.clearScript = function () {
-  return Reflect.deleteProperty(this, ScriptCollection)
+const oldAdd = Object3D.prototype.add
+Object3D.prototype.add = function (...object: (Object3D | InstanceModel)[]) {
+  object.forEach((obj) => {
+    if (obj instanceof InstanceModel) {
+      let extendModelCollection = Reflect.get(
+        this,
+        ExtendModelCollection
+      ) as InstanceModel[]
+      if (!extendModelCollection) {
+        extendModelCollection = []
+        Reflect.set(this, ExtendModelCollection, extendModelCollection)
+      }
+      if (!extendModelCollection.includes(obj)) extendModelCollection.push(obj)
+    } else if (obj instanceof Object3D) {
+      oldAdd.call(this, obj)
+    }
+  })
+  return this
 }

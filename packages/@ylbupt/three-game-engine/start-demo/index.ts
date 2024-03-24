@@ -2,10 +2,8 @@ import {
   AnimationModel,
   ColliderScript,
   Input,
-  InstanceModel,
   LoaderBar,
   MainApp,
-  MainAppOptions,
   SoundManager,
   cloneModel
 } from '@ylbupt/three-game-engine'
@@ -14,8 +12,7 @@ import {
   HemisphereLight,
   LoadingManager,
   Mesh,
-  MeshBasicMaterial,
-  MeshStandardMaterial
+  MeshBasicMaterial
 } from 'three'
 import { LoaderBarDomElement } from './loader-bar'
 import { RotateScript, RotateScriptOptions } from './scripts/Rotate'
@@ -73,6 +70,7 @@ export class MyApp extends MainApp {
       false,
       loadingManager_2
     )
+    this.scene.add(this.model)
     this.loaderBar.addLoadingManager('manager-2', loadingManager_2)
     /* 挂载脚本 */
     this.model.addScript<RotateScript>(RotateScript, {
@@ -94,9 +92,6 @@ export class MyApp extends MainApp {
       this.soundManager.load(),
       this.model.load()
     ])
-    /* 将加载的模型添加到场景中 */
-    this.scene.add(this.model.getRootObject()!)
-    this.mixers.push(this.model.mixer!)
     this.model.loopAllActions(3000)
 
     this.loaderBar.hidden()
@@ -107,13 +102,13 @@ export class MyApp extends MainApp {
     this.collider_1.intersects(this.collider_2)
 
     if (this.collider_1.triggerEnter()) {
-      console.log('Enter')
+      document.getElementById('state')!.innerText = 'Enter'
     }
     if (this.collider_1.triggerStay()) {
-      console.log('Stay')
+      document.getElementById('state')!.innerText = 'Stay'
     }
     if (this.collider_1.triggerExit()) {
-      console.log('Exit')
+      document.getElementById('state')!.innerText = 'Exit'
     }
   }
 
