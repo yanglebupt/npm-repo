@@ -1,6 +1,6 @@
 # bootstrap()
 
-通过执行场景对象的 `mounted()` 和 `loadWithLifecycle()`，启动一个场景，如<a href="/#/APIs/MainApp?id=loadwithlifecycle">生命周期</a>所示
+通过执行场景对象的 `mounted()` 和 `loadWithLifecycle()`，启动一个场景，如<a href="javascript:changeHash(`#/APIs/MainApp?id=loadwithlifecycle`)">生命周期</a>所示
 
 ```typescript
 export function bootstrap(app: MainApp) {
@@ -33,7 +33,7 @@ function addScene(
 
 #### loadScene()
 
-`destroy()` 当前场景，然后根据 id 启动一个场景。首先先在 Map 中查找场景工厂函数，然后调用创建场景对象，最后通过 <a href="/#/APIs/SceneManager?id=bootstrap">`bootstrap()`</a> 方法启动场景
+`destroy()` 当前场景，然后根据 id 启动一个场景。首先先在 Map 中查找场景工厂函数，然后调用创建场景对象，最后通过 <a href="javascript:changeHash(`#/APIs/SceneManager?id=bootstrap`)">`bootstrap()`</a> 方法启动场景
 
 ```typescript
 function loadScene<T extends MainApp>(

@@ -31,6 +31,7 @@ export interface Script {
 
 ## Attributes
 
+- `options` 脚本初始化参数，挂载时自己可以传入
 - `object` 脚本挂载在的 `Object3D` 对象，对于外部加载的对象，需要在 `created()` 及其之后才能进行操作
 - `uuid` 脚本的唯一 id
 
