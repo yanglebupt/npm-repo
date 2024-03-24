@@ -120,4 +120,8 @@ export class MyApp extends MainApp {
       this.soundManager.play('engine.mp3')
     }
   }
+
+  beforeDestroy() {
+    this.input.removeAllEventListener()
+  }
 }

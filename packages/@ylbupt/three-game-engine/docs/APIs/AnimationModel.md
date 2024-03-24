@@ -14,8 +14,7 @@ constructor(
 )
 ```
 
-注意这里的包围盒是静态的，不会随着模型运动而改变，如果想要添加动态包围盒，请设置 `needBox=false` 并使用 `Collider` 脚
-本。加载 GLTF 的配置选项类型如下
+注意这里的包围盒是静态的，不会随着模型运动而改变，如果想要添加动态包围盒，请设置 `needBox=false` 并使用 <a href="javascript:changeHash(`#/APIs/Collider?id=colliderscript`)">`ColliderScript`</a> 脚本。加载 GLTF 的配置选项类型如下
 
 ```typescript
 export type LoadGLTFOptions = Partial<{
@@ -54,6 +53,8 @@ mounted(){
     this.loadingManager,
     {decoderPath: '/src/libs/draco/'}
   )
+  /* 将加载的模型添加到场景中 */
+  this.scene.add(this.model)
 }
 
 async load() {
@@ -61,26 +62,23 @@ async load() {
     super.load(),
     this.model.load()
   ])
-  /* 将加载的模型添加到场景中 */
-  this.scene.add(this.model.getRootObject()!) 
 }
 ```
 
-注意当需要控制加载的 3D 物体的属性时需要通过 `getRootObject()` 方法获取根对象，然后进行控制位移，旋转等，十分不方便，因此我们已经将 `InstanceModel` 实例的原型指向了该 3D 物体，现在可以直接操作 `InstanceModel` 实例来控制 3D 物体的属性
+注意当需要控制加载的 3D 物体的属性时需要通过 `getRootObject()` 方法获取根对象，然后进行控制位移，旋转等，十分不方便，因此我们已经将 `InstanceModel` 实例的原型指向了该 3D 物体，现在可以直接操作 `InstanceModel` 实例来控制 3D 物体的属性，但需要注意在 load 之后才能操作
 
 ```typescript
-// 例子 this.model 就是 InstanceModel 的一个实例
-this.scene.add(this.model.getRootObject()!)
+// after load
 /* InstanceModel 实例上也有对应的 Object3D 方法 */
 this.model.position.set(0, 2, 0)
 this.model.rotateY(45)
 ```
 
-当然后续我们会统一采用<a href="/#/APIs/Script.md">自定义脚本</a>来完成对物体的控制
+当然后续我们会统一采用<a href="javascript:changeHash(`#/APIs/Script?id=script`)">自定义脚本</a>来完成对物体的控制
 
 # AnimationModel 
 
-用来加载带有模型动画的 `GLTF` 模型的类，继承自 `InstanceModel`，其构造函数参数不变，但新增了许多可以控制模型动画播放的属性和函数
+用来加载带有模型动画的 `GLTF` 模型的类，继承自 `InstanceModel`，其构造函数参数不变，并且使用方式相同，但新增了许多可以控制模型动画播放的属性和函数
 
 ## Attributes 
 

@@ -94,8 +94,6 @@ async load() {
     super.load(),
     this.model.load()
   ])
-  /* 将加载的模型添加到场景中 */
-  this.scene.add(this.model.getRootObject()!)
 }
 ```
 

@@ -4,7 +4,12 @@
 
 ## ColliderScript
 
-这是一个内置脚本，在渲染过程中会更新包围盒，并对目标进行碰撞检测
+这是一个内置脚本，在渲染过程中会更新包围盒，并对目标进行碰撞检测，直接挂载即可
+
+```typescript
+/* 挂载碰撞器 */
+this.collider_2 = this.model.addScript<ColliderScript>(ColliderScript)
+```
 
 ### Attributes
 
