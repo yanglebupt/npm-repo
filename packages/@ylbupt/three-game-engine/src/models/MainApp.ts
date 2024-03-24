@@ -14,7 +14,13 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { EnvMapType, loadHDRTexture } from '../tools/loader'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
-import { ObjectScript, Script, ScriptCollection } from './Script'
+import {
+  ExtendModelCollection,
+  ObjectScript,
+  Script,
+  ScriptCollection
+} from './Script'
+import { AnimationModel, InstanceModel } from './AnimationModel'
 
 /**
  * @param {ColorRepresentation} backgroundColor 背景颜色
@@ -101,6 +107,8 @@ export class MainApp implements Script {
     this.awaked()
     /* 加载资源 */
     this.load().then(() => {
+      // 将所有加载好的模型添加
+      this.addModelToScene()
       this.created()
       if (this.options.showHelper) this.helper()
       this.renderer.setAnimationLoop(this.render.bind(this))
@@ -172,11 +180,18 @@ export class MainApp implements Script {
   }
 
   /* 遍历场景并执行对应脚本函数 */
-  traverseObjectScript = (
-    value?: Object3D,
+  traverseObjectScript(
+    scene: Scene,
     callback?: (script: ObjectScript) => void
-  ) => {
-    if (!value) return
+  ) {
+    this.traverseModelObjectScript(scene, callback)
+    this.traverseSceneObjectScript(scene, callback)
+  }
+
+  traverseScriptCollection(
+    value: Object3D | InstanceModel,
+    callback?: (script: ObjectScript) => void
+  ) {
     const scriptCollection = Reflect.get(value, ScriptCollection)
     if (scriptCollection) {
       Object.keys(scriptCollection).forEach((n) => {
@@ -185,9 +200,46 @@ export class MainApp implements Script {
         Reflect.set(script, 'freeze', false)
       })
     }
+  }
+
+  traverseModelObjectScript(
+    scene: Scene,
+    callback?: (script: ObjectScript) => void
+  ) {
+    const extendModelCollection = Reflect.get(
+      scene,
+      ExtendModelCollection
+    ) as InstanceModel[]
+    if (extendModelCollection && extendModelCollection.length > 0) {
+      extendModelCollection.forEach((model) => {
+        this.traverseScriptCollection(model, callback)
+      })
+    }
+  }
+
+  traverseSceneObjectScript(
+    value?: Object3D,
+    callback?: (script: ObjectScript) => void
+  ) {
+    if (!value) return
+    this.traverseScriptCollection(value, callback)
     value.children.forEach((value) =>
-      this.traverseObjectScript(value, callback)
+      this.traverseSceneObjectScript(value, callback)
     )
+  }
+
+  addModelToScene() {
+    const extendModelCollection = Reflect.get(
+      this.scene,
+      ExtendModelCollection
+    ) as InstanceModel[]
+    if (extendModelCollection && extendModelCollection.length > 0) {
+      extendModelCollection.forEach((model) => {
+        this.scene.add(model.getRootObject()!)
+        if (model instanceof AnimationModel) this.mixers.push(model.mixer!)
+      })
+    }
+    Reflect.set(this.scene, ExtendModelCollection, [])
   }
 
   render() {

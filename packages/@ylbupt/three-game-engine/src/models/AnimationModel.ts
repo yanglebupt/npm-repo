@@ -58,7 +58,7 @@ export class InstanceModel {
     this.needBox = needBox
     this.loadingManager = loadingManager ?? new LoadingManager()
     this.options = options
-    Object.setPrototypeOf(this.getPrototype(), new ScriptMethods())
+    Object.setPrototypeOf(this.getPrototype(), ScriptMethods.prototype)
   }
 
   load(): Promise<void>
