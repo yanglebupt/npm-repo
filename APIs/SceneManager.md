@@ -40,3 +40,22 @@ function loadScene<T extends MainApp>(
   id: SceneID,
 ): T
 ```
+
+## 装饰器
+
+我们提供了 `@AddScene` 装饰器来更加方便添加场景，接受的参数是 `(id: SceneID, options?: MainAppOptions)`
+
+```typescript
+@AddScene(1, {
+  orbitControl: true,
+  showHelper: true
+})
+export class MyApp extends MainApp {}
+```
+
+然后我们就可以之间加载场景了
+
+```typescript
+import { loadScene } from '@ylbupt/three-game-engine'
+loadScene(1)
+```
