@@ -67,12 +67,12 @@ export class MainApp implements Script {
   options: MainAppOptions
   private _lookAt: Vector3 = new Vector3(0, 0, 0)
 
-  constructor(options: MainAppOptions) {
+  constructor(options?: MainAppOptions) {
     this.container = document.createElement('div')
     document.body.appendChild(this.container)
 
     this.scene = new Scene()
-    this.scene.background = new Color(options.backgroundColor || 0xcccccc)
+    this.scene.background = new Color(options?.backgroundColor || 0xcccccc)
 
     this.mainCamera = new PerspectiveCamera(
       70,
@@ -86,7 +86,7 @@ export class MainApp implements Script {
 
     this.renderer = this.createRenderer()
 
-    this.orbitControl = options.orbitControl
+    this.orbitControl = options?.orbitControl
       ? new OrbitControls(this.mainCamera, this.renderer.domElement)
       : null
 
@@ -97,7 +97,7 @@ export class MainApp implements Script {
     this.mixers = []
     this.clock = new Clock()
     this.loadingManager = new LoadingManager()
-    this.options = options
+    this.options = options || {}
   }
 
   mounted() {}

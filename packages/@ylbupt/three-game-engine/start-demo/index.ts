@@ -1,4 +1,5 @@
 import {
+  AddScene,
   AnimationModel,
   ColliderScript,
   Input,
@@ -17,6 +18,10 @@ import {
 import { LoaderBarDomElement } from './loader-bar'
 import { RotateScript, RotateScriptOptions } from './scripts/Rotate'
 
+@AddScene(1, {
+  orbitControl: true,
+  showHelper: true
+})
 export class MyApp extends MainApp {
   soundManager: SoundManager
   input: Input

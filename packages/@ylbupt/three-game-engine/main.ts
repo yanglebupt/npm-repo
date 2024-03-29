@@ -1,14 +1,5 @@
-import { MyApp } from './start-demo'
-import { SceneManager } from '@ylbupt/three-game-engine'
+import { loadScene } from '@ylbupt/three-game-engine'
 
-const _SceneManager = new SceneManager()
-_SceneManager.addScene(
-  1,
-  () =>
-    new MyApp({
-      orbitControl: true,
-      showHelper: true
-    })
-)
+loadScene(1)
 
-const app = _SceneManager.loadScene(1)
+export * from './start-demo'

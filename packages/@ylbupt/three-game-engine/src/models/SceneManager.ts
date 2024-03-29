@@ -1,25 +1,30 @@
 import { MainApp } from './MainApp'
 
 export type SceneID = number | string | symbol
+export type SceneManager = Map<SceneID, () => MainApp>
 
-export class SceneManager {
-  sceneMap: Map<SceneID, () => MainApp> = new Map()
-  constructor() {}
+export const DefaultSceneManager: SceneManager = new Map()
 
-  addScene(id: SceneID, createScene: () => MainApp) {
-    this.sceneMap.set(id, createScene)
-  }
+export function addScene(
+  id: SceneID,
+  createScene: () => MainApp,
+  manager?: SceneManager
+) {
+  ;(manager ?? DefaultSceneManager).set(id, createScene)
+}
 
-  loadScene<T extends MainApp>(id: SceneID) {
-    const createScene = this.sceneMap.get(id)
-    if (!createScene) return
-    // 清空当前场景
-    window.app?.destroy()
-    // 新建 id 场景
-    const app = bootstrap(createScene())
-    window.app = app
-    return app as T
-  }
+export function loadScene<T extends MainApp>(
+  id: SceneID,
+  manager?: SceneManager
+) {
+  const createScene = (manager ?? DefaultSceneManager).get(id)
+  if (!createScene) return
+  // 清空当前场景
+  window.app?.destroy()
+  // 新建 id 场景
+  const app = bootstrap(createScene())
+  window.app = app
+  return app as T
 }
 
 export function bootstrap(app: MainApp) {
